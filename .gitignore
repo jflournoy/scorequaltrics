@@ -3,3 +3,6 @@
 
 # R files
 .Rhistory
+
+# authentication
+credentials.yaml
