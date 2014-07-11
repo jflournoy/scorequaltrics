@@ -1,3 +1,5 @@
+library(yaml)
+
 #' Get authentication
 #' 
 #' Instructions here: https://survey.qualtrics.com/WRAPI/ControlPanel/docs.php#authentication_2.3
