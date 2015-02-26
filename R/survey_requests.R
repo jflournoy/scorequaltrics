@@ -53,8 +53,7 @@ get_survey_responses<-function (
       Token = token,
       SurveyID=surveyid, 
         Format = format, 
-        Version = version,
-        ExportQuestionIDs = exportquestionids)
+        Version = version)
     if (!is.null(otherArgs) & is.list(otherArgs)) {
       api_args <- c(api_args,otherArgs)
     }
