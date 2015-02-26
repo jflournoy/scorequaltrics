@@ -17,6 +17,6 @@ LazyLoad: yes
 URL: http://jbryer.github.com/qualtrics
 Collate:
     'panels.R'
-    'surveys.R'
+    'survey_requests.R'
     'VariableUI.r'
     'parseXMLResponse.r'
