@@ -20,3 +20,5 @@ Collate:
     'survey_requests.R'
     'VariableUI.r'
     'parseXMLResponse.r'
+    'auth.R'
+    'api_requests.R'
