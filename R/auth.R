@@ -1,13 +1,11 @@
-
-
 #' Get authentication
 #' 
 #' Instructions here: https://survey.qualtrics.com/WRAPI/ControlPanel/docs.php#authentication_2.3
 #' 
 #' @param creds_yaml The .yaml file that contains the user's credentials
+#' @import yaml
 #' @export
 creds_from_file <- function(creds_yaml = "credentials.yaml") {
-  require(yaml)
   return(yaml.load_file(creds_yaml))
 }
 
@@ -39,6 +37,7 @@ creds_from_file <- function(creds_yaml = "credentials.yaml") {
 #' @param title the title of the dialog box.
 #' @param prompt the prompt the user will see on the dialog box.
 #' @return a \code{\link{list}} of named values entered by the user.
+#' @import tcltk
 #' @export
 varEntryDialog <- function(vars, 
                            labels = vars,
@@ -46,7 +45,6 @@ varEntryDialog <- function(vars,
                            fun = rep(list(as.character), length(vars)),
                            title = 'Variable Entry',
                            prompt = NULL) {
-  require(tcltk)
   
   stopifnot(length(vars) == length(labels), length(labels) == length(fun))
   

@@ -1,5 +1,3 @@
-require(jsonlite)
-
 #' Return a list of all surveys available to the user
 #' 
 #' @param creds Qualtrics credentials. A list with values for user and token.
@@ -7,6 +5,7 @@ require(jsonlite)
 #' @param token Qualtrics API token.
 #' @param format The format of the requested data. Default is JSON.
 #' @param version The API version to use. Defaults to the latest version, 2.4.
+#' @import jsonlite
 #' @export
 get_surveys <- function(creds, user = creds$user, token = creds$token, 
                         format = "JSON", version = "2.4") {
@@ -37,6 +36,7 @@ get_surveys <- function(creds, user = creds$user, token = creds$token,
 #' @param format The format of the requested data. Default is JSON.
 #' @param version The API version to use. Defaults to the latest version, 2.4.
 #' @param otherArgs A `list` of other arguments to provide the API.
+#' @import jsonlite
 #' @export
 get_survey_responses<-function (
   creds, 
