@@ -6,10 +6,10 @@ library(jsonlite)
 #' @param user Qualtrics username.
 #' @param token Qualtrics API token.
 #' @param format The format of the requested data. Default is JSON.
-#' @param version The API version to use. Defaults to the latest version, 2.3.
+#' @param version The API version to use. Defaults to the latest version, 2.4.
 #' @export
 get_surveys <- function(creds, user = creds$user, token = creds$token, 
-                        format = "JSON", version = "2.3") {
+                        format = "JSON", version = "2.4") {
   api_args <- list(Request = "getSurveys",
                    User = user,
                    Token = token,
@@ -19,7 +19,7 @@ get_surveys <- function(creds, user = creds$user, token = creds$token,
   api_request <- format_request(api_args)
   result <- fromJSON(api_request)
   
-  surveys <- result$Surveys$Result
+  surveys <- result$Result$Surveys
   
   if ("Payload" %in% colnames(surveys)) {
     surveys[["Payload"]] <- NULL # remove the nested columns from Payload
@@ -35,11 +35,11 @@ get_surveys <- function(creds, user = creds$user, token = creds$token,
 #' @param user Qualtrics username.
 #' @param token Qualtrics API token.
 #' @param format The format of the requested data. Default is JSON.
-#' @param version The API version to use. Defaults to the latest version, 2.3.
+#' @param version The API version to use. Defaults to the latest version, 2.4.
 #' @export
 get_survey_name <- function(creds, survey_id, 
                             user = creds$user, token = creds$token, 
-                            format = "JSON", version = "2.3") {
+                            format = "JSON", version = "2.4") {
   
   surveys <- get_surveys(creds, format = format, version = version)
   survey_name <- surveys[surveys$SurveyID == survey_id, "SurveyName"]
@@ -53,11 +53,11 @@ get_survey_name <- function(creds, survey_id,
 #' @param user Qualtrics username.
 #' @param token Qualtrics API token.
 #' @param format The format of the requested data. Default is JSON.
-#' @param version The API version to use. Defaults to the latest version, 2.3.
+#' @param version The API version to use. Defaults to the latest version, 2.4.
 #' @export
 get_survey_id <- function(creds, survey_name,
                           user = creds$user, token = creds$token,
-                          format = "JSON", version = "2.3") {
+                          format = "JSON", version = "2.4") {
   surveys <- get_surveys(creds, format = format, version = version)
   survey_id <- surveys[surveys$SurveyName == survey_name, "SurveyID"]
   return(survey_id)
