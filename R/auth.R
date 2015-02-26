@@ -1,4 +1,4 @@
-library(yaml)
+
 
 #' Get authentication
 #' 
@@ -7,6 +7,7 @@ library(yaml)
 #' @param creds_yaml The .yaml file that contains the user's credentials
 #' @export
 creds_from_file <- function(creds_yaml = "credentials.yaml") {
+  require(yaml)
   return(yaml.load_file(creds_yaml))
 }
 

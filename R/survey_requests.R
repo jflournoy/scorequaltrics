@@ -1,4 +1,4 @@
-library(jsonlite)
+require(jsonlite)
 
 #' Return a list of all surveys available to the user
 #' 
