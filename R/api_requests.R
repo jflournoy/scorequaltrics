@@ -4,7 +4,8 @@
 #' @param api_args List of arguments
 #' @export
 format_request <- function(api_args, rooturl = "https://survey.qualtrics.com/WRAPI/ControlPanel/api.php") {
-  query <- paste(names(api_args), api_args, sep="=", collapse="&")
+  api_args_encd<-lapply(api_args,URLencode,reserved=T)
+  query <- paste(names(api_args_encd), api_args_encd, sep="=", collapse="&")
   request <- paste(rooturl, query, sep="?")
-  return(URLencode(request,reserved=T))
+  return(request)
 }
