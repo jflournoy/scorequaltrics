@@ -1,24 +1,26 @@
-Package: qualtrics
+Package: scorequaltrics
 Type: Package
-Title: Qualtrics Survey Data Access
-Version: 0.9.1
-Date: 2012-01-26
-Author: Jason Bryer <jbryer@excelsior.edu>
-Maintainer: Jason Bryer <jbryer@excelsior.edu>
+Title: Qualtrics Survey Data Access and Scoring
+Version: 0.2.0
+Authors@R: c(person("John", "Flournoy", "C.", role = c("aut", "cre"), email = "flournoy@uoregon.edu"), 
+    person("Jason", "Bryer", "", role = c("ctb"), email = "jbryer@excelsior.edu"))
+Maintainer: John Flournoy <flournoy@uoregon.edu>
 Depends:
     utils,
-    XML
+    XML,
+    data.table
 Description: This R project/package provides functions that wrap the
     Qualtrics.com web survey tool. API access is required and requests can be
     made to Qualtrics Support. Functions include extracting survey data into R
-    as well as managing panels and sending surveys.
-License: GPL
-LazyLoad: yes
-URL: http://jbryer.github.com/qualtrics
-Collate:
-    'panels.R'
-    'survey_requests.R'
-    'VariableUI.r'
-    'parseXMLResponse.r'
-    'auth.R'
-    'api_requests.R'
+    as well as managing panels and sending surveys. Additionally, this package
+    allows easy scoring of retreived data using templates defined in csv files.
+License: MIT License
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.0.1
+URL: http://jflournoy.github.com/qualtrics
+Suggests: dplyr,
+    tidyr,
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
