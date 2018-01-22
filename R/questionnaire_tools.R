@@ -33,42 +33,53 @@ get_survey_data<-function(surveysDF, creds, pid_col='ID'){
 
 #' Get rubrics
 #'
-#' @param rubric_filenames Vector of file paths named "file".
+#' @param rubric_filenames Data frame with column of file paths named "file".
+#' @param type "scoring" for special handling of scoring rubrics, or "recoding"
+#' for special handling of recoding rubrics.
 #' @param source Unused, default's to 'csv' for now.
 #'
-#' @return Returns a long data frame of rubrics with names:
-#' [1] "file"           "data_file_name" "scale_name"     "column_name"
-#' [5] "reverse"        "transform"      "scored_scale"   "include"
-#' [9] "min"            "max"
+#' @return If \code{type='scoring'}, returns a long data frame of rubrics with names:
+#' "file"           "data_file_name" "scale_name"     "column_name"
+#' "reverse"        "transform"      "scored_scale"   "include"
+#' "min"            "max". Otherwise, it returns the transforming rubric with names: 
 #' @import dplyr
 #' @import tidyr
 #' @export
-get_rubrics<-function(rubric_filenames, source='csv'){
-  csv_rubrics <- rubric_filenames %>%
-    mutate(file=as.character(file)) %>%
-    group_by(file) %>%
-    do({
-      data_frame(rubric=list(read.csv(.$file[[1]], header=T,stringsAsFactors=F)))
-    })
-  rubric_data_long <- csv_rubrics %>%
-    group_by(file) %>%
-    do({
-      names(.$rubric[[1]])<-tolower(gsub(' ','_',gsub('\\.','_',names(.$rubric[[1]]))))
-      aDF<-gather(
-        .$rubric[[1]],
-        scored_scale,
-        include,
-        -one_of(
-          "data_file_name",
-          "scale_name",
-          "column_name",
-          "reverse",
-          "transform",
-          "min",
-          "max")
-      ) %>% mutate_all(funs(as.character))
-    })
-  rubric_data_long
+get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv") 
+{
+    if(! type %in% c('scoring', 'recoding')){
+        stop('Option `type` must be either "scoring" or "transforming"')
+    }
+    
+    csv_rubrics <- rubric_filenames %>% 
+        mutate(file = as.character(file)) %>% 
+        group_by(file) %>% do({
+            data_frame(rubric = list(read.csv(.$file[[1]], header = T, 
+                                              stringsAsFactors = F)))
+        })
+    
+    rubric_data_long <- csv_rubrics %>% 
+        group_by(file) %>% 
+        do({
+            names(.$rubric[[1]]) <- tolower(gsub(" ", 
+                                                 "_", 
+                                                 gsub("\\.", 
+                                                      "_", names(.$rubric[[1]]))))
+            if(type == 'scoring'){
+                aDF <- gather(.$rubric[[1]], 
+                              scored_scale, 
+                              include, 
+                              -one_of("data_file_name", 
+                                      "scale_name", "column_name", "reverse", "transform", 
+                                      "min", "max")) %>% 
+                    mutate_all(funs(as.character))
+            } else if (type == 'recoding') {
+                aDF <- .$rubric[[1]]
+            }
+            aDF
+        })
+    
+    rubric_data_long
 }
 
 
