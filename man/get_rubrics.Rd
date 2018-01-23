@@ -4,18 +4,23 @@
 \alias{get_rubrics}
 \title{Get rubrics}
 \usage{
-get_rubrics(rubric_filenames, source = "csv")
+get_rubrics(rubric_filenames, type = "scoring", source = "csv")
 }
 \arguments{
-\item{rubric_filenames}{Vector of file paths named "file".}
+\item{rubric_filenames}{Data frame with column of file paths named "file".}
+
+\item{type}{"scoring" for special handling of scoring rubrics, or "recoding"
+for special handling of recoding rubrics.}
 
 \item{source}{Unused, default's to 'csv' for now.}
 }
 \value{
-Returns a long data frame of rubrics with names:
-[1] "file"           "data_file_name" "scale_name"     "column_name"
-[5] "reverse"        "transform"      "scored_scale"   "include"
-[9] "min"            "max"
+If \code{type='scoring'}, returns a long data frame of rubrics with names:
+"file"           "data_file_name" "scale_name"     "column_name"
+"reverse"        "transform"      "scored_scale"   "include"
+"min"            "max". Otherwise, it returns the transforming rubric with names: 
+"file"           "data_file_name" "scale_name"     "column_name"    "answer"        
+"response"       "score"
 }
 \description{
 Get rubrics

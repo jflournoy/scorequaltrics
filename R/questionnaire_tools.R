@@ -42,13 +42,15 @@ get_survey_data<-function(surveysDF, creds, pid_col='ID'){
 #' "file"           "data_file_name" "scale_name"     "column_name"
 #' "reverse"        "transform"      "scored_scale"   "include"
 #' "min"            "max". Otherwise, it returns the transforming rubric with names: 
+#' "file"           "data_file_name" "scale_name"     "column_name"    "answer"        
+#' "response"       "score"    
 #' @import dplyr
 #' @import tidyr
 #' @export
 get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv") 
 {
     if(! type %in% c('scoring', 'recoding')){
-        stop('Option `type` must be either "scoring" or "transforming"')
+        stop('Option `type` must be either "scoring" or "recoding"')
     }
     
     csv_rubrics <- rubric_filenames %>% 
@@ -61,12 +63,14 @@ get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv")
     rubric_data_long <- csv_rubrics %>% 
         group_by(file) %>% 
         do({
-            names(.$rubric[[1]]) <- tolower(gsub(" ", 
-                                                 "_", 
-                                                 gsub("\\.", 
-                                                      "_", names(.$rubric[[1]]))))
+            thisDF <- .$rubric[[1]]
+  
+            names(thisDF) <- tolower(gsub(" ", 
+                                          "_", 
+                                          gsub("\\.", 
+                                               "_", names(thisDF))))
             if(type == 'scoring'){
-                aDF <- gather(.$rubric[[1]], 
+                aDF <- gather(thisDF, 
                               scored_scale, 
                               include, 
                               -one_of("data_file_name", 
@@ -74,7 +78,9 @@ get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv")
                                       "min", "max")) %>% 
                     mutate_all(funs(as.character))
             } else if (type == 'recoding') {
-                aDF <- .$rubric[[1]]
+                
+                aDF <- thisDF %>% 
+                    mutate_all(funs(as.character))
             }
             aDF
         })
@@ -82,6 +88,13 @@ get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv")
     rubric_data_long
 }
 
+#' @export
+get_uncoercibles <- function(dataDF){
+    dataDT <- as.data.table(dataDF)
+    dataDT <- dataDT[, checkcol := class(type.convert(value, as.is=T)) == 'character', by = .(item,value)]
+    dataDT <- dataDT[checkcol == T]
+    return(dataDT[,checkcol := NULL])
+}
 
 #' Get items from data file that exist in a rubric
 #'
@@ -93,7 +106,7 @@ get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv")
 #' @export
 get_items_in_rubric <- function(dataDF, rubricDF){
   dataDT <- as.data.table(dataDF)
-  rubricCols <- rubricDF$column_name
+  rubricCols <- rubricDF$column_name[rubricDF$include %in% c(1, "1", "sum", "prod")]
   smallDF <- as.data.frame(dataDT[item %in% rubricCols])
   return(smallDF)
 }
@@ -393,4 +406,42 @@ score_questionnaire_psych <- function(dataDF, rubricsDF, scale_name = NULL, retu
   }
   rownames(scored_scales$scores) <- dataDF_w$SID
   return(scored_scales)
+}
+
+
+#' Recode repsonses
+#' 
+#' Recodes responses according to a rubric.
+#' 
+#' @param dataDF A long data frame.
+#' @param recoding_rubric A recoding rubric with columns `column_name`,
+#'   `response`, and `score`
+#'   
+#' @return the data frame passed to it, with each value in `value` replaced with
+#'   the recoded value in `score` from the template.
+#' @export
+#' @import data.table
+recode_responses <- function(dataDF, recoding_rubric){
+    recoding_rubric_reduced <- select(ungroup(recoding_rubric),
+                                      column_name, response, score)
+    
+    dataDF_recoding <- dataDF %>%
+        left_join(recoding_rubric_reduced, 
+                  by = c("item" = "column_name", "value" = "response")) %>%
+        as.data.table
+    
+    to_recode <- dataDF_recoding %>%
+        ungroup() %>%
+        filter(!is.na(score),
+               score != value) %>%
+        summarize(N_recoded = n())
+    
+    dataDF_recoding[, value := ifelse(!is.na(score),
+                                      score,
+                                      value)]
+    dataDF_recoding[, score := NULL]
+    
+    message('A total of ', to_recode$N_recoded, ' items recoded.')
+    
+    return(as.data.frame(dataDF_recoding))
 }
