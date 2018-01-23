@@ -84,9 +84,15 @@ score_pdss <- function(long_survey_data_filtered, gender_mix='mf', gendercode=c(
                 gender <- .$value[.$item=='PDS_Gender'] 
             }
             if(is.null(gender) || length(gender %in% c(NA, '')) == 0 || gender %in% c(NA, '')) {
-                gender <- .$value[.$item=='Gender']
+                if(length(.$value[.$item=='Gender']) > 0){
+                    gender <- .$value[.$item=='Gender']
+                } else {
+                    gender <- NA
+                }
             }
-            if(gender==gendercode['m']){ #male
+            if (is.na(gender)){
+                thisDF <- data.frame(SID = .$SID[[1]])
+            } else if(gender==gendercode['m']){ #male
                 thisDF <- .[grepl('PDS_M', .$item), ]
             } else if (gender==gendercode['f']){ #female
                 thisDF <- .[grepl('PDS_F', .$item), ]
@@ -222,6 +228,7 @@ score_pdss <- function(long_survey_data_filtered, gender_mix='mf', gendercode=c(
     }
     
     scored_pdss <- pds_data %>% ungroup %>% 
+        filter(!is.na(gender)) %>%
         mutate(item.new=qnames[item]) %>%
         dplyr::select(SID, gender, value, item.new) %>%
         spread(item.new, value) %>%
@@ -244,9 +251,22 @@ score_pdss <- function(long_survey_data_filtered, gender_mix='mf', gendercode=c(
         gather(key, value, -SID) %>% #distinct(key)
         extract(key, c('scored_scale', 'attribute'), '(\\w+)\\.(\\w+)') %>%
         spread(attribute, value) %>%
-        mutate(scale_name='PDSS', method='pdss', score=as.character(score)) %>%
+        mutate(scale_name='PDSS', method='pdss', score=as.character(score),
+               n_items = ifelse(scored_scale == 'gender', 1, n_items),
+               n_missing = ifelse(scored_scale == 'gender', 0, n_missing)) %>%
         dplyr::select(scale_name, scored_scale, SID, 
                       score, n_items, n_missing, method)
     
-    return(scored_pdss)
+    no_gender_df <- pds_data %>% 
+        ungroup %>% 
+        filter(is.na(gender)) %>%
+        select(SID, gender) %>%
+        gather(scored_scale, score, -SID) %>%
+        mutate(scale_name = 'PDSS', 
+               method='pdss', score=as.character(score),
+               n_items = 0, n_missing = 1)
+    
+    scored_pdss_complete <- bind_rows(scored_pdss, no_gender_df)
+    
+    return(scored_pdss_complete)
 }
