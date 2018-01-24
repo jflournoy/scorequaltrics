@@ -445,3 +445,80 @@ recode_responses <- function(dataDF, recoding_rubric){
     
     return(as.data.frame(dataDF_recoding))
 }
+
+#' Widen Qualtrics Long
+#'
+#' @param dataDF a scored data frame
+#' @param scale_names a vector of scale names to be matched exactly
+#'
+#' @return a list with \code{scores}, a wide format data frame with scale scores,
+#' and \code{data_quality}, a wide format data frame with number if missing and used items
+#' for each scale.
+#' @export
+#' @import tidyr
+#' @import dplyr
+widen_qualtrics_long <- function(dataDF, scale_names){
+    dataDF_scores <- dataDF %>%
+        filter(scale_name %in% scale_names) %>%
+        select(SID, score, scale_name, scored_scale) %>%
+        spread(scored_scale, score)
+    
+    dataDF_data_quality <- dataDF %>%
+        filter(scale_name %in% scale_names) %>%
+        select(SID, scale_name, scored_scale, n_items, n_missing) %>%
+        gather(attribute, value, n_items, n_missing) %>%
+        unite(scored_scale_attribute, scored_scale, attribute) %>%
+        spread(scored_scale_attribute, value)
+    
+    return(list(scores = dataDF_scores, data_quality = dataDF_data_quality))
+}
+
+
+#' Plot Scored Scale
+#'
+#' @param aDF a scored data frame in long format with columns \code{scale_name}, 
+#' \code{scored_scale}, and \code{score}
+#' @param scale_regx a regular expression that selects scales from column \code{scale_name} in \code{aDF}
+#' @param type Can be 'score', 'n_missing' (aDF must have column \code{n_missing}), or 'p_missing' 
+#' (aDF must have columns \code{n_missing} and \code{n_items}).
+#' @param by_gender logical flag to facet by gender.
+#' @param gender_var name of the column that contains gender information for faceting.
+#'
+#' @return a gggplot
+#' @export
+#' @import ggplot2
+#' @import dplyr
+#'
+plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender = FALSE, gender_var = NA){
+    aDF <- aDF %>%
+        filter(grepl(scale_regx, scale_name)) %>%
+        mutate_at(vars(score, n_missing, n_items), as.numeric)
+    
+    if(length(unique(aDF$scale_name)) > 1){
+        warning('Matched multiple scales: "', paste(unique(aDF$scale_name), collapse = '", "'), '".')
+    }
+    
+    if (type == 'score'){
+        colname <- 'score'
+        ylab <- 'Scale Score'
+    } else if (type == 'n_missing') {
+        colname <- 'n_missing'
+        ylab <- 'Number of missing responses'
+    } else if (type == 'p_missing') {
+        aDF$p_missing <- aDF$n_missing/(aDF$n_items + aDF$n_missing)
+        colname <- 'p_missing'
+        ylab <- 'Proportion of missing responses'
+    }
+    
+    p <- ggplot(aDF, aes_string(y = colname, x = 'scored_scale')) +
+        geom_violin(fill = 'black', alpha = .25, color = 'gray') +
+        geom_boxplot(alpha = .5, width = .25, color = 'black') + 
+        geom_point(position = position_jitter(w = .125, h = 0),
+                   alpha = .25, color = 'blue') +
+        labs(y = ylab, x = 'Scale name') +
+        theme_classic()
+    if(by_gender){
+        p <- p + facet_grid(reformulate(gender_var, '.'))
+    }
+    return(p)
+}
