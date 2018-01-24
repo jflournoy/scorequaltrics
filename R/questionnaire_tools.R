@@ -516,7 +516,9 @@ plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender 
         geom_point(position = position_jitter(w = .125, h = 0),
                    alpha = .25, color = 'blue') +
         labs(y = ylab, x = 'Scale name') +
-        theme_classic()
+        theme_classic() + 
+        theme(axis.text.x = element_text(angle = 360-45, hjust = 0))
+    
     if(by_gender){
         p <- p + facet_grid(reformulate(gender_var, '.'))
     }
