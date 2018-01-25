@@ -490,9 +490,11 @@ widen_qualtrics_long <- function(dataDF, scale_names){
 #' @import dplyr
 #'
 plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender = FALSE, gender_var = NA){
+    numeric_cols <- c('score', 'n_missing', 'n_items')
+    numeric_cols <- numeric_cols[numeric_cols %in% names(aDF)]
     aDF <- aDF %>%
         filter(grepl(scale_regx, scale_name)) %>%
-        mutate_at(vars(score, n_missing, n_items), as.numeric)
+        mutate_at(numeric_cols, as.numeric)
     
     if(length(unique(aDF$scale_name)) > 1){
         warning('Matched multiple scales: "', paste(unique(aDF$scale_name), collapse = '", "'), '".')
@@ -523,4 +525,29 @@ plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender 
         p <- p + facet_grid(reformulate(gender_var, '.'))
     }
     return(p)
+}
+
+
+#' Longen a wide psych-scored scale
+#'
+#' @param psychMat a matrix from the \code{$scores} element of a \code{psych} object.
+#' @param scale_name use to specify the name of the scale.
+#' @param id_colname use to set the column name of for the ids (taken from the 
+#' rownames of the \code{psychMat}).
+#'
+#' @return a long data frame with an id column defined by id_colname, 'scale_name', 
+#' 'scored_scale', and 'score'
+#' @export
+#' 
+#' @import dplyr
+#' @import tidyr
+longen_psych_wide <- function(psychMat, scale_name = 'scale', id_colname = 'id'){
+    psychDF <- as.data.frame(psychMat)
+    psychDF$id <- rownames(psychDF)
+    names(psychDF)[length(names(psychDF))] <- id_colname
+    psychDF$scale_name <- scale_name
+    psychDF_long <- psychDF %>%
+        tidyr::gather(key = "scored_scale", value = "score",
+                      -one_of(c('scale_name', id_colname)))
+    return(psychDF_long)
 }
