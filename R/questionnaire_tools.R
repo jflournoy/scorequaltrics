@@ -392,6 +392,7 @@ score_questionnaire_psych <- function(dataDF, rubricsDF, scale_name = NULL, retu
                                     reverse = ifelse(is.na(reverse), 0, reverse),
                                     rscore_col_name = paste0(ifelse(reverse == 1, '-', ''), column_name)))    
     } else {
+        warning('No reverse-keyed items.')
         rubricsDF <- ungroup(mutate(rubricsDF,
                                     rscore_col_name = column_name))
     }
