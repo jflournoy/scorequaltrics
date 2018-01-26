@@ -379,33 +379,39 @@ clean_dupes <- function(longDF, pid_col = 'ID'){
 #' @import dplyr
 #' @import tidyr
 score_questionnaire_psych <- function(dataDF, rubricsDF, scale_name = NULL, return_with_data = FALSE){
-  require(psych)
-  if(!is.null(scale_name)){
-    rubricsDF <- filter(rubricsDF, scale_name == scale_name)
-  }
-
-  if('include' %in% names(rubricsDF)){
-    rubricsDF <- ungroup(filter(rubricsDF, include == 1))
-  }
-
-  keys_list_l <- select(mutate(rubricsDF,
-                               rscore_col_name = paste0(ifelse(reverse == 1, '-', ''), column_name)),
-                        rscore_col_name, scored_scale)
-
-  scored_scale_names <- unique(keys_list_l$scored_scale)
-  key_list <- lapply(scored_scale_names, function(x){
-    keys_list_l$rscore_col_name[keys_list_l$scored_scale == x]
-  })
-  names(key_list) <- scored_scale_names
-
-  dataDF_w <- spread(select(dataDF, SID, item, value),
-                     item, value)
-  scored_scales <- scoreItems(key_list, dataDF_w)
-  if(return_with_data){
-    scored_scales$input_data <- dataDF_w
-  }
-  rownames(scored_scales$scores) <- dataDF_w$SID
-  return(scored_scales)
+    require(psych)
+    if(!is.null(scale_name)){
+        rubricsDF <- filter(rubricsDF, scale_name == scale_name)
+    }
+    
+    if('include' %in% names(rubricsDF)){
+        rubricsDF <- ungroup(filter(rubricsDF, include == 1))
+    }
+    if('reverse' %in% names(rubricsDF)){
+        rubricsDF <- ungroup(mutate(rubricsDF, 
+                                    reverse = ifelse(is.na(reverse), 0, reverse),
+                                    rscore_col_name = paste0(ifelse(reverse == 1, '-', ''), column_name)))    
+    } else {
+        rubricsDF <- ungroup(mutate(rubricsDF,
+                                    rscore_col_name = column_name))
+    }
+    
+    keys_list_l <- select(rubricsDF, rscore_col_name, scored_scale)
+    
+    scored_scale_names <- unique(keys_list_l$scored_scale)
+    key_list <- lapply(scored_scale_names, function(x){
+        keys_list_l$rscore_col_name[keys_list_l$scored_scale == x]
+    })
+    names(key_list) <- scored_scale_names
+    
+    dataDF_w <- spread(select(dataDF, SID, item, value),
+                       item, value)
+    scored_scales <- scoreItems(key_list, dataDF_w)
+    if(return_with_data){
+        scored_scales$input_data <- dataDF_w
+    }
+    rownames(scored_scales$scores) <- dataDF_w$SID
+    return(scored_scales)
 }
 
 
@@ -514,9 +520,9 @@ plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender 
     
     p <- ggplot(aDF, aes_string(y = colname, x = 'scored_scale')) +
         geom_violin(fill = 'black', alpha = .25, color = 'gray') +
-        geom_boxplot(alpha = .5, width = .25, color = 'black') + 
-        geom_point(position = position_jitter(w = .125, h = 0),
-                   alpha = .25, color = 'blue') +
+        geom_boxplot(alpha = .5, width = .25, color = '#555555') + 
+        geom_point(position = position_jitter(w = .125, h = .05),
+                   alpha = .3, color = 'blue', size = .75) +
         labs(y = ylab, x = 'Scale name') +
         theme_classic() + 
         theme(axis.text.x = element_text(angle = 360-45, hjust = 0))
