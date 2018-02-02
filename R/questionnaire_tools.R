@@ -465,17 +465,17 @@ recode_responses <- function(dataDF, recoding_rubric){
 #' @import tidyr
 #' @import dplyr
 widen_qualtrics_long <- function(dataDF, scale_names){
-    dataDF_scores <- dataDF %>%
-        filter(scale_name %in% scale_names) %>%
-        select(SID, score, scale_name, scored_scale) %>%
-        spread(scored_scale, score)
+    dataDF_scores <- dataDF %>% dplyr::ungroup() %>% 
+        dplyr::filter(scale_name %in% scale_names) %>%
+        dplyr::select(SID, score, scored_scale) %>%
+        tidyr::spread(scored_scale, score)
     
-    dataDF_data_quality <- dataDF %>%
-        filter(scale_name %in% scale_names) %>%
-        select(SID, scale_name, scored_scale, n_items, n_missing) %>%
-        gather(attribute, value, n_items, n_missing) %>%
-        unite(scored_scale_attribute, scored_scale, attribute) %>%
-        spread(scored_scale_attribute, value)
+    dataDF_data_quality <- dataDF %>% dplyr::ungroup() %>%
+        dplyr::filter(scale_name %in% scale_names) %>% 
+        dplyr::select(SID, scored_scale, n_items, n_missing) %>%
+        tidyr::gather(attribute, value, n_items, n_missing) %>%
+        tidyr::unite(scored_scale_attribute, scored_scale, attribute) %>%
+        tidyr::spread(scored_scale_attribute, value)
     
     return(list(scores = dataDF_scores, data_quality = dataDF_data_quality))
 }
@@ -557,4 +557,46 @@ longen_psych_wide <- function(psychMat, scale_name = 'scale', id_colname = 'id')
         tidyr::gather(key = "scored_scale", value = "score",
                       -one_of(c('scale_name', id_colname)))
     return(psychDF_long)
+}
+
+#' Make nice scale filename
+#'
+#' @param scale_name Name of the scale (a character)
+#'
+#' @return A character that would be nice to compose into a filename.
+#' @export
+make_nice_scale_fname <- function(scale_name){
+    scale_fname <- gsub('\\.', 
+                        '_', 
+                        make.names(scale_name))
+    return(scale_fname)
+}
+
+#' Write widened scored scale
+#'
+#' @param dataDF A long data frame.
+#' @param scale_names A character vector of scale names to widen and write.
+#' @param dir_name The output directory to save csv files.
+#' @param file_name A custom file name. 
+#'
+#' @export
+write_widened_scored_scale <- function(dataDF, scale_names = NULL, dir_name = NULL, file_name = NULL){
+    if(is.null(scale_names)){
+        scale_names <- unique(dataDF$scale_name)
+    }
+    if(is.null(file_name)){
+        if(length(scale_names) == 1){
+            file_name <- paste0(make_nice_scale_fname(scale_names), '.csv')
+        } else {
+            file_name <- 'scored_scales_wide.csv'
+        }
+    }
+    if(is.null(dir_name)){
+        dir_name <- getwd()
+    }
+    wide_data_frame <- scorequaltrics::widen_qualtrics_long(dataDF,
+                                                            scale_names = scale_names)
+    full_file_name <- file.path(dir_name, file_name)
+    message('Writing to ', full_file_name)
+    write.csv(wide_data_frame, file = full_file_name, row.names = F)
 }
