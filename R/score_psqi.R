@@ -215,8 +215,8 @@ score_single_psqi_row <- function(psqi_data){
     hours_weekends <- scorequaltrics:::score_psqi_4(psqi_data$PSQI_4_2_TEXT, return_value = 'hours')  
     sleepbedratio_weekdays <- hours_weekdays / as.numeric(time_diff_weekdays)
     sleepbedratio_weekends <- hours_weekends / as.numeric(time_diff_weekends)
-    component4_weekdays <- psqi_score_component_4(sleepbedratio_weekdays)
-    component4_weekends <- psqi_score_component_4(sleepbedratio_weekends)
+    component4_weekdays <- scorequaltrics:::score_psqi_component_4(sleepbedratio_weekdays)
+    component4_weekends <- scorequaltrics:::score_psqi_component_4(sleepbedratio_weekends)
     c4_wkdays_n_items <- sum(!is.na(c(psqi_data$PSQI_3_1_TEXT, psqi_data$PSQI_1_1_TEXT,
                                       psqi_data$PSQI_4_1_TEXT)))
     c4_wkdays_n_missing <- sum(is.na(c(psqi_data$PSQI_3_1_TEXT, psqi_data$PSQI_1_1_TEXT,
@@ -235,7 +235,7 @@ score_single_psqi_row <- function(psqi_data){
                   psqi_data$PSQI_5_g,
                   psqi_data$PSQI_5_h,
                   psqi_data$PSQI_5_i)
-    component5 <- score_psqi_component_5(c5_items)
+    component5 <- scorequaltrics:::score_psqi_component_5(c5_items)
     c5_n_items <- sum(!is.na(c5_items))
     c5_n_missing <- sum(is.na(c5_items))
     
@@ -366,4 +366,5 @@ score_psqi <- function(dataDF, pid_col='ID'){
         })
     scoredDF$scale_name <- 'PSQI'
     scoredDF$method <- 'psqi'
+    return(scoredDF)
 }

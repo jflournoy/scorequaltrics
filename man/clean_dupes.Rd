@@ -4,12 +4,14 @@
 \alias{clean_dupes}
 \title{Clean duplicates}
 \usage{
-clean_dupes(longDF, pid_col = "ID")
+clean_dupes(longDF, pid_col = "ID", keep_text = FALSE)
 }
 \arguments{
 \item{longDF}{longDF}
 
 \item{pid_col}{pid_col}
+
+\item{keep_text}{keep_text?}
 }
 \description{
 Clean duplicates

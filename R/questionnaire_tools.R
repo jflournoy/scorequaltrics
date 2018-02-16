@@ -336,36 +336,41 @@ score_step_one_and_two<-function(dataDF,rubricsDF){
 #'
 #' @param longDF longDF
 #' @param pid_col pid_col
+#' @param keep_text keep_text?
 #'
 #' @import dplyr
 #' @import tidyr
 #' 
 #' @export
-clean_dupes <- function(longDF, pid_col = 'ID'){
-  cleanedDF <- longDF %>% ungroup() %>%
-    group_by_at(.vars = c(pid_col, 'item')) %>% #group by rows with the same item name and SID
-    do({ #for each group
-      values <- na.exclude(as.numeric(.$value)) #get values in `values` column, make numeric (which yields NA if value==''), and exclude NA (no info, and no possible conflict)
-      dropped <- FALSE #Keep track of whether we have to drop this observation due to conflicts
-      if(length(values>0) && all(values==values[[1]])){ #if there are multiple values, but they agree (all values are equal to the first value)
-        bestValue <- values[[1]] #then just take the first value
-      } else {
-        #If after excluding missing values, the values are not all the same, this means
-        #there must be more than one value, and there are differences between them.
-        #There's not a good heuristic here -- this means that either they took the
-        #questionnaire twice and answered differently (in which case, which is the 'right' answer),
-        #or there is a problem with the SID column, and we need to figure out if
-        #there is a miscoding of SID. Either way, there is some manual intervention needed so
-        #we set the value to NA, and flag this observation as dropped.
-        bestValue <- NA
-        dropped <- TRUE
-      }
-      adf <- .[1,] #retain all the info from the first row of this group
-      adf$old.value <- list(values) #wrap up all the values from the group, and save them to aid error checking
-      adf$value <- bestValue #set the value to what we decided above
-      adf$dropped <- dropped #set the dropped flag
-      adf #return the new data frame, which should now be 1 row per item per SID.
-    })
+clean_dupes <- function(longDF, pid_col = 'ID', keep_text = FALSE){
+    cleanedDF <- longDF %>% ungroup() %>%
+        group_by_at(.vars = c(pid_col, 'item')) %>% #group by rows with the same item name and SID
+        do({ #for each group
+            if(keep_text){
+                values <- na.exclude(.$value)
+            } else {
+                values <- na.exclude(as.numeric(.$value)) #get values in `values` column, make numeric (which yields NA if value==''), and exclude NA (no info, and no possible conflict)   
+            }
+            dropped <- FALSE #Keep track of whether we have to drop this observation due to conflicts
+            if(length(values>0) && all(values==values[[1]])){ #if there are multiple values, but they agree (all values are equal to the first value)
+                bestValue <- values[[1]] #then just take the first value
+            } else {
+                #If after excluding missing values, the values are not all the same, this means
+                #there must be more than one value, and there are differences between them.
+                #There's not a good heuristic here -- this means that either they took the
+                #questionnaire twice and answered differently (in which case, which is the 'right' answer),
+                #or there is a problem with the SID column, and we need to figure out if
+                #there is a miscoding of SID. Either way, there is some manual intervention needed so
+                #we set the value to NA, and flag this observation as dropped.
+                bestValue <- NA
+                dropped <- TRUE
+            }
+            adf <- .[1,] #retain all the info from the first row of this group
+            adf$old.value <- list(values) #wrap up all the values from the group, and save them to aid error checking
+            adf$value <- bestValue #set the value to what we decided above
+            adf$dropped <- dropped #set the dropped flag
+            adf #return the new data frame, which should now be 1 row per item per SID.
+        })
 }
 
 #' score questionnaire psych
