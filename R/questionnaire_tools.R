@@ -347,7 +347,7 @@ clean_dupes <- function(longDF, pid_col = 'ID', keep_text = FALSE){
         group_by_at(.vars = c(pid_col, 'item')) %>% #group by rows with the same item name and SID
         do({ #for each group
             if(keep_text){
-                values <- na.exclude(.$value)
+                values <- na.exclude(ifelse(.$value == '', NA, .$value))
             } else {
                 values <- na.exclude(as.numeric(.$value)) #get values in `values` column, make numeric (which yields NA if value==''), and exclude NA (no info, and no possible conflict)   
             }
