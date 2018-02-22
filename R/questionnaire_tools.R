@@ -583,9 +583,15 @@ make_nice_scale_fname <- function(scale_name){
 #' @param scale_names A character vector of scale names to widen and write.
 #' @param dir_name The output directory to save csv files.
 #' @param file_name A custom file name. 
+#' @param metadata List of key-value pairs that will be added as 
+#' column name - column values to the returned data frames.
+#' @import tibble
+#' @import rlang
 #'
 #' @export
-write_widened_scored_scale <- function(dataDF, scale_names = NULL, dir_name = NULL, file_name = NULL){
+write_widened_scored_scale <- function(dataDF, scale_names = NULL, 
+                                       dir_name = NULL, file_name = NULL,
+                                       metadata = NULL){
     if(is.null(scale_names)){
         scale_names <- unique(dataDF$scale_name)
     }
@@ -601,6 +607,9 @@ write_widened_scored_scale <- function(dataDF, scale_names = NULL, dir_name = NU
     }
     wide_data_frame <- scorequaltrics::widen_qualtrics_long(dataDF,
                                                             scale_names = scale_names)
+    if(!is.null(metadata)){
+        wide_data_frame <- lapply(wide_data_frame, tibble::add_column, rlang::UQS(metadata))
+    }
     full_file_name <- file.path(dir_name, file_name)
     message('Writing to ', full_file_name)
     write.csv(wide_data_frame, file = full_file_name, row.names = F)
