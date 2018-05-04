@@ -8,12 +8,12 @@ plot_scored_scale(aDF, scale_regx = ".*", type = "score",
   by_gender = FALSE, gender_var = NA)
 }
 \arguments{
-\item{aDF}{a scored data frame in long format with columns \code{scale_name}, 
+\item{aDF}{a scored data frame in long format with columns \code{scale_name},
 \code{scored_scale}, and \code{score}}
 
 \item{scale_regx}{a regular expression that selects scales from column \code{scale_name} in \code{aDF}}
 
-\item{type}{Can be 'score', 'n_missing' (aDF must have column \code{n_missing}), or 'p_missing' 
+\item{type}{Can be 'score', 'n_missing' (aDF must have column \code{n_missing}), or 'p_missing'
 (aDF must have columns \code{n_missing} and \code{n_items}).}
 
 \item{by_gender}{logical flag to facet by gender.}

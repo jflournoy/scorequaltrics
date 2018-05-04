@@ -16,7 +16,7 @@ write_widened_scored_scale(dataDF, scale_names = NULL, dir_name = NULL,
 
 \item{file_name}{A custom file name.}
 
-\item{metadata}{List of key-value pairs that will be added as 
+\item{metadata}{List of key-value pairs that will be added as
 column name - column values to the returned data frames.}
 }
 \description{

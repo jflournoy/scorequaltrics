@@ -11,11 +11,11 @@ longen_psych_wide(psychMat, scale_name = "scale", id_colname = "id")
 
 \item{scale_name}{use to specify the name of the scale.}
 
-\item{id_colname}{use to set the column name of for the ids (taken from the 
+\item{id_colname}{use to set the column name of for the ids (taken from the
 rownames of the \code{psychMat}).}
 }
 \value{
-a long data frame with an id column defined by id_colname, 'scale_name', 
+a long data frame with an id column defined by id_colname, 'scale_name',
 'scored_scale', and 'score'
 }
 \description{

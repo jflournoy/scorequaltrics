@@ -18,8 +18,8 @@ for special handling of recoding rubrics.}
 If \code{type='scoring'}, returns a long data frame of rubrics with names:
 "file"           "data_file_name" "scale_name"     "column_name"
 "reverse"        "transform"      "scored_scale"   "include"
-"min"            "max". Otherwise, it returns the transforming rubric with names: 
-"file"           "data_file_name" "scale_name"     "column_name"    "answer"        
+"min"            "max". Otherwise, it returns the transforming rubric with names:
+"file"           "data_file_name" "scale_name"     "column_name"    "answer"
 "response"       "score"
 }
 \description{
