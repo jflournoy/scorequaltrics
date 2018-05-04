@@ -3,6 +3,7 @@
 export(addRecipient)
 export(clean_dupes)
 export(createPanel)
+export(create_key_from_rubric)
 export(creds_from_file)
 export(format_request)
 export(getPanel)

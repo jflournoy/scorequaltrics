@@ -41,50 +41,50 @@ get_survey_data<-function(surveysDF, creds, pid_col='ID'){
 #' @return If \code{type='scoring'}, returns a long data frame of rubrics with names:
 #' "file"           "data_file_name" "scale_name"     "column_name"
 #' "reverse"        "transform"      "scored_scale"   "include"
-#' "min"            "max". Otherwise, it returns the transforming rubric with names: 
-#' "file"           "data_file_name" "scale_name"     "column_name"    "answer"        
-#' "response"       "score"    
+#' "min"            "max". Otherwise, it returns the transforming rubric with names:
+#' "file"           "data_file_name" "scale_name"     "column_name"    "answer"
+#' "response"       "score"
 #' @import dplyr
 #' @import tidyr
 #' @export
-get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv") 
+get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv")
 {
     if(! type %in% c('scoring', 'recoding')){
         stop('Option `type` must be either "scoring" or "recoding"')
     }
-    
-    csv_rubrics <- rubric_filenames %>% 
-        mutate(file = as.character(file)) %>% 
+
+    csv_rubrics <- rubric_filenames %>%
+        mutate(file = as.character(file)) %>%
         group_by(file) %>% do({
-            data_frame(rubric = list(read.csv(.$file[[1]], header = T, 
+            data_frame(rubric = list(read.csv(.$file[[1]], header = T,
                                               stringsAsFactors = F)))
         })
-    
-    rubric_data_long <- csv_rubrics %>% 
-        group_by(file) %>% 
+
+    rubric_data_long <- csv_rubrics %>%
+        group_by(file) %>%
         do({
             thisDF <- .$rubric[[1]]
-  
-            names(thisDF) <- tolower(gsub(" ", 
-                                          "_", 
-                                          gsub("\\.", 
+
+            names(thisDF) <- tolower(gsub(" ",
+                                          "_",
+                                          gsub("\\.",
                                                "_", names(thisDF))))
             if(type == 'scoring'){
-                aDF <- gather(thisDF, 
-                              scored_scale, 
-                              include, 
-                              -one_of("data_file_name", 
-                                      "scale_name", "column_name", "reverse", "transform", 
-                                      "min", "max")) %>% 
+                aDF <- gather(thisDF,
+                              scored_scale,
+                              include,
+                              -one_of("data_file_name",
+                                      "scale_name", "column_name", "reverse", "transform",
+                                      "min", "max")) %>%
                     mutate_all(funs(as.character))
             } else if (type == 'recoding') {
-                
-                aDF <- thisDF %>% 
+
+                aDF <- thisDF %>%
                     mutate_all(funs(as.character))
             }
             aDF
         })
-    
+
     rubric_data_long
 }
 
@@ -233,7 +233,7 @@ score_questionnaire<-function(dataDF, rubricsDF, psych = FALSE, ...){
 #'
 #' @param dataDF dataDF
 #' @param rubricsDF rubricsDF
-#' 
+#'
 #' @import dplyr
 #' @import tidyr
 score_questionnaire_dsn <- function(dataDF,rubricsDF){
@@ -305,10 +305,10 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
 #' @param dataDF A data.frame as returned by \code{\link{get_survey_data}}
 #' @param rubricsDF A data.frame as returned by \code{\link{get_rubrics}}
 #' @return A long-form data.frame with scale scores.
-#' 
+#'
 #' @import dplyr
 #' @import tidyr
-#' 
+#'
 #' @export
 score_step_one_and_two<-function(dataDF,rubricsDF){
   #Do step one of the scoring...
@@ -340,7 +340,7 @@ score_step_one_and_two<-function(dataDF,rubricsDF){
 #'
 #' @import dplyr
 #' @import tidyr
-#' 
+#'
 #' @export
 clean_dupes <- function(longDF, pid_col = 'ID', keep_text = FALSE){
     cleanedDF <- longDF %>% ungroup() %>%
@@ -349,7 +349,7 @@ clean_dupes <- function(longDF, pid_col = 'ID', keep_text = FALSE){
             if(keep_text){
                 values <- na.exclude(ifelse(.$value == '', NA, .$value))
             } else {
-                values <- na.exclude(as.numeric(.$value)) #get values in `values` column, make numeric (which yields NA if value==''), and exclude NA (no info, and no possible conflict)   
+                values <- na.exclude(as.numeric(.$value)) #get values in `values` column, make numeric (which yields NA if value==''), and exclude NA (no info, and no possible conflict)
             }
             dropped <- FALSE #Keep track of whether we have to drop this observation due to conflicts
             if(length(values>0) && all(values==values[[1]])){ #if there are multiple values, but they agree (all values are equal to the first value)
@@ -373,6 +373,44 @@ clean_dupes <- function(longDF, pid_col = 'ID', keep_text = FALSE){
         })
 }
 
+#' Create \code{psych} key from rubric
+#'
+#' @param rubricsDF rubricsDF
+#' @param scale_name scale_name
+#'
+#' @return a key list for use in the \code{psych} package.
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+create_key_from_rubric <- function(rubricsDF, scale_name = NULL){
+    if(!is.null(scale_name)){
+        rubricsDF <- filter(rubricsDF, scale_name == scale_name)
+    }
+
+    if('include' %in% names(rubricsDF)){
+        rubricsDF <- ungroup(filter(rubricsDF, include == 1))
+    }
+    if('reverse' %in% names(rubricsDF)){
+        rubricsDF <- ungroup(mutate(rubricsDF,
+                                    reverse = ifelse(is.na(reverse), 0, reverse),
+                                    rscore_col_name = paste0(ifelse(reverse == 1, '-', ''), column_name)))
+    } else {
+        warning('No reverse-keyed items.')
+        rubricsDF <- ungroup(mutate(rubricsDF,
+                                    rscore_col_name = column_name))
+    }
+
+    keys_list_l <- select(rubricsDF, rscore_col_name, scored_scale)
+
+    scored_scale_names <- unique(keys_list_l$scored_scale)
+    key_list <- lapply(scored_scale_names, function(x){
+        keys_list_l$rscore_col_name[keys_list_l$scored_scale == x]
+    })
+    names(key_list) <- scored_scale_names
+    return(key_list)
+}
+
 #' score questionnaire psych
 #'
 #' @param dataDF dataDF
@@ -385,31 +423,9 @@ clean_dupes <- function(longDF, pid_col = 'ID', keep_text = FALSE){
 #' @import tidyr
 score_questionnaire_psych <- function(dataDF, rubricsDF, scale_name = NULL, return_with_data = FALSE){
     require(psych)
-    if(!is.null(scale_name)){
-        rubricsDF <- filter(rubricsDF, scale_name == scale_name)
-    }
-    
-    if('include' %in% names(rubricsDF)){
-        rubricsDF <- ungroup(filter(rubricsDF, include == 1))
-    }
-    if('reverse' %in% names(rubricsDF)){
-        rubricsDF <- ungroup(mutate(rubricsDF, 
-                                    reverse = ifelse(is.na(reverse), 0, reverse),
-                                    rscore_col_name = paste0(ifelse(reverse == 1, '-', ''), column_name)))    
-    } else {
-        warning('No reverse-keyed items.')
-        rubricsDF <- ungroup(mutate(rubricsDF,
-                                    rscore_col_name = column_name))
-    }
-    
-    keys_list_l <- select(rubricsDF, rscore_col_name, scored_scale)
-    
-    scored_scale_names <- unique(keys_list_l$scored_scale)
-    key_list <- lapply(scored_scale_names, function(x){
-        keys_list_l$rscore_col_name[keys_list_l$scored_scale == x]
-    })
-    names(key_list) <- scored_scale_names
-    
+
+    key_list <- create_key_from_rubric(rubricsDF = rubricsDF, scale_name = scale_name)
+
     dataDF_w <- spread(select(dataDF, SID, item, value),
                        item, value)
     scored_scales <- scoreItems(key_list, dataDF_w)
@@ -422,13 +438,13 @@ score_questionnaire_psych <- function(dataDF, rubricsDF, scale_name = NULL, retu
 
 
 #' Recode repsonses
-#' 
+#'
 #' Recodes responses according to a rubric.
-#' 
+#'
 #' @param dataDF A long data frame.
 #' @param recoding_rubric A recoding rubric with columns `column_name`,
 #'   `response`, and `score`
-#'   
+#'
 #' @return the data frame passed to it, with each value in `value` replaced with
 #'   the recoded value in `score` from the template.
 #' @export
@@ -436,25 +452,25 @@ score_questionnaire_psych <- function(dataDF, rubricsDF, scale_name = NULL, retu
 recode_responses <- function(dataDF, recoding_rubric){
     recoding_rubric_reduced <- select(ungroup(recoding_rubric),
                                       column_name, response, score)
-    
+
     dataDF_recoding <- dataDF %>%
-        left_join(recoding_rubric_reduced, 
+        left_join(recoding_rubric_reduced,
                   by = c("item" = "column_name", "value" = "response")) %>%
         as.data.table
-    
+
     to_recode <- dataDF_recoding %>%
         ungroup() %>%
         filter(!is.na(score),
                score != value) %>%
         summarize(N_recoded = n())
-    
+
     dataDF_recoding[, value := ifelse(!is.na(score),
                                       score,
                                       value)]
     dataDF_recoding[, score := NULL]
-    
+
     message('A total of ', to_recode$N_recoded, ' items recoded.')
-    
+
     return(as.data.frame(dataDF_recoding))
 }
 
@@ -470,28 +486,28 @@ recode_responses <- function(dataDF, recoding_rubric){
 #' @import tidyr
 #' @import dplyr
 widen_qualtrics_long <- function(dataDF, scale_names){
-    dataDF_scores <- dataDF %>% dplyr::ungroup() %>% 
+    dataDF_scores <- dataDF %>% dplyr::ungroup() %>%
         dplyr::filter(scale_name %in% scale_names) %>%
         dplyr::select(SID, score, scored_scale) %>%
         tidyr::spread(scored_scale, score)
-    
+
     dataDF_data_quality <- dataDF %>% dplyr::ungroup() %>%
-        dplyr::filter(scale_name %in% scale_names) %>% 
+        dplyr::filter(scale_name %in% scale_names) %>%
         dplyr::select(SID, scored_scale, n_items, n_missing) %>%
         tidyr::gather(attribute, value, n_items, n_missing) %>%
         tidyr::unite(scored_scale_attribute, scored_scale, attribute) %>%
         tidyr::spread(scored_scale_attribute, value)
-    
+
     return(list(scores = dataDF_scores, data_quality = dataDF_data_quality))
 }
 
 
 #' Plot Scored Scale
 #'
-#' @param aDF a scored data frame in long format with columns \code{scale_name}, 
+#' @param aDF a scored data frame in long format with columns \code{scale_name},
 #' \code{scored_scale}, and \code{score}
 #' @param scale_regx a regular expression that selects scales from column \code{scale_name} in \code{aDF}
-#' @param type Can be 'score', 'n_missing' (aDF must have column \code{n_missing}), or 'p_missing' 
+#' @param type Can be 'score', 'n_missing' (aDF must have column \code{n_missing}), or 'p_missing'
 #' (aDF must have columns \code{n_missing} and \code{n_items}).
 #' @param by_gender logical flag to facet by gender.
 #' @param gender_var name of the column that contains gender information for faceting.
@@ -507,11 +523,11 @@ plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender 
     aDF <- aDF %>%
         filter(grepl(scale_regx, scale_name)) %>%
         mutate_at(numeric_cols, as.numeric)
-    
+
     if(length(unique(aDF$scale_name)) > 1){
         warning('Matched multiple scales: "', paste(unique(aDF$scale_name), collapse = '", "'), '".')
     }
-    
+
     if (type == 'score'){
         colname <- 'score'
         ylab <- 'Scale Score'
@@ -523,16 +539,16 @@ plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender 
         colname <- 'p_missing'
         ylab <- 'Proportion of missing responses'
     }
-    
+
     p <- ggplot(aDF, aes_string(y = colname, x = 'scored_scale')) +
         geom_violin(fill = 'black', alpha = .25, color = 'gray') +
-        geom_boxplot(alpha = .5, width = .25, color = '#555555') + 
+        geom_boxplot(alpha = .5, width = .25, color = '#555555') +
         geom_point(position = position_jitter(w = .125, h = .05),
                    alpha = .3, color = 'blue', size = .75) +
         labs(y = ylab, x = 'Scale name') +
-        theme_classic() + 
+        theme_classic() +
         theme(axis.text.x = element_text(angle = 360-70, hjust = 0))
-    
+
     if(by_gender){
         p <- p + facet_grid(reformulate(gender_var, '.'))
     }
@@ -544,13 +560,13 @@ plot_scored_scale <- function(aDF, scale_regx = '.*', type = 'score', by_gender 
 #'
 #' @param psychMat a matrix from the \code{$scores} element of a \code{psych} object.
 #' @param scale_name use to specify the name of the scale.
-#' @param id_colname use to set the column name of for the ids (taken from the 
+#' @param id_colname use to set the column name of for the ids (taken from the
 #' rownames of the \code{psychMat}).
 #'
-#' @return a long data frame with an id column defined by id_colname, 'scale_name', 
+#' @return a long data frame with an id column defined by id_colname, 'scale_name',
 #' 'scored_scale', and 'score'
 #' @export
-#' 
+#'
 #' @import dplyr
 #' @import tidyr
 longen_psych_wide <- function(psychMat, scale_name = 'scale', id_colname = 'id'){
@@ -571,8 +587,8 @@ longen_psych_wide <- function(psychMat, scale_name = 'scale', id_colname = 'id')
 #' @return A character that would be nice to compose into a filename.
 #' @export
 make_nice_scale_fname <- function(scale_name){
-    scale_fname <- gsub('\\.', 
-                        '_', 
+    scale_fname <- gsub('\\.',
+                        '_',
                         make.names(scale_name))
     return(scale_fname)
 }
@@ -582,14 +598,14 @@ make_nice_scale_fname <- function(scale_name){
 #' @param dataDF A long data frame.
 #' @param scale_names A character vector of scale names to widen and write.
 #' @param dir_name The output directory to save csv files.
-#' @param file_name A custom file name. 
-#' @param metadata List of key-value pairs that will be added as 
+#' @param file_name A custom file name.
+#' @param metadata List of key-value pairs that will be added as
 #' column name - column values to the returned data frames.
 #' @import tibble
 #' @import rlang
 #'
 #' @export
-write_widened_scored_scale <- function(dataDF, scale_names = NULL, 
+write_widened_scored_scale <- function(dataDF, scale_names = NULL,
                                        dir_name = NULL, file_name = NULL,
                                        metadata = NULL){
     if(is.null(scale_names)){
