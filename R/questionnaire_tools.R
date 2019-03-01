@@ -119,7 +119,7 @@ get_items_in_rubric <- function(dataDF, rubricDF){
 #' @param mean.na.rm mean.na.rm
 #' @param scale_name scale_name
 #' @param scored_scale scored_scale
-score_items<-function(item_values,scoring_methods,na.rm=F,mean.na.rm=T,scale_name='', scored_scale=''){
+score_items<-function(item_values,scoring_methods,na.rm=F,mean.na.rm=T,scale_name='', scored_scale='', SID=''){
   # item_values should be a vector of numbers
   # scoring_methods should be a function that takes a vector, or '1'
   #check that all elements in `scoring` are the same
@@ -130,19 +130,37 @@ score_items<-function(item_values,scoring_methods,na.rm=F,mean.na.rm=T,scale_nam
                 '(scale name is ',scale_name,', scored scale is ',scored_scale,')\n',
                 paste(scoring_methods, collapse='\n')))
   scoring_method<-unique(scoring_methods)
+  
+  length_vars <- lapply(list(item_values, scoring_methods), length)
+  detail_vars <- list(SID = SID, scale_name = scale_name, scored_scale = scale_name)
+  length_details <- lapply(detail_vars, length)
+  if(any(!length_vars > 0)){
+      message('Empty values or scoring method vector...')
+      if(any(length_details > 0)){
+          details <- detail_vars[which(length_details > 0)]
+          message('Details: ', 
+                  paste(paste(names(details), details, sep = ': '), collapse = ', '),
+                  '.')
+      } else {
+          message('No scale or subscale info.')
+      }
+      return(NA)
+  }
+  
   if (scoring_method==1){
     scoring_func<-mean
     na.rm=mean.na.rm
-  }
-  else
+  } else {
     scoring_func<-try(get(scoring_method))
+  }
   if (class(scoring_func)=='try-error')
     stop(paste('Scoring method "',scoring_method,'" not found. (scale name is ',scale_name,')'))
-  if(na.rm)
+  if(na.rm) {
     do_for_na<-na.exclude
-  else
+  } else {
     do_for_na<-na.pass
-  scoring_func(do_for_na(item_values))
+  }
+  return(scoring_func(do_for_na(item_values)))
 }
 
 #' Reverse score
@@ -223,9 +241,9 @@ transform_scores<-function(item_values,transformation,min=NA,max=NA){
 #' @export
 score_questionnaire<-function(dataDF, rubricsDF, psych = FALSE, ...){
   if(psych){
-    score_questionnaire_psych(dataDF, rubricsDF, ...)
+    return(score_questionnaire_psych(dataDF, rubricsDF, ...))
   } else {
-    score_questionnaire_dsn(dataDF, rubricsDF, ...)
+    return(score_questionnaire_dsn(dataDF, rubricsDF, ...))
   }
 }
 
@@ -248,7 +266,24 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
         "column_name" = "item")) %>%
     filter(!(include %in% c(0,NA,'0','NA',''))) # this filters the rubrics
 
-  nonNumeric_items = scores_with_scoring_params %>% filter(include %in% 'I')
+  nonNumeric_items <- scores_with_scoring_params %>% filter(include %in% 'I')
+  
+  if(!is.na(dim(nonNumeric_items)[1]) && dim(nonNumeric_items)[1] > 0){
+      non_numeric <- nonNumeric_items %>%
+          mutate(na.rm=F) %>%
+          group_by(scale_name,scored_scale,SID) %>%
+          summarise(
+              score=scorequaltrics:::score_items(
+                  value,
+                  include,
+                  scale_name=scale_name[[1]],
+                  scored_scale=scored_scale[[1]]),
+              n_items=sum(!is.na(value)),
+              n_missing=sum(is.na(value)),
+              method=unique(include))
+  } else {
+      non_numeric <- data.frame()
+  }
 
   transform_scored<-
     scores_with_scoring_params %>%
@@ -257,7 +292,7 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
       value=as.numeric(
         ifelse(
           !(transform %in% c(0,NA,'')),
-          transform_scores(
+          scorequaltrics:::transform_scores(
             value,
             transform,
             min=as.numeric(min[[1]]),
@@ -271,33 +306,29 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
       value=as.numeric(
         ifelse(
           reverse %in% 1,
-          reverse_score(
+          scorequaltrics:::reverse_score(
             value,
             min=as.numeric(min[[1]]),
             max=as.numeric(max[[1]])),
           value))) %>%
     filter(!include %in% 'I')
 
-  non_numeric <- nonNumeric_items %>%
-    mutate(na.rm=F) %>%
-    group_by(scale_name,scored_scale,SID) %>%
-    summarise(
-      score=score_items(value,include,na.rm=na.rm[[1]],scale_name=scale_name[[1]],scored_scale=scored_scale[[1]]),
-      n_items=sum(!is.na(value)),
-      n_missing=sum(is.na(value)),
-      method=unique(include))
-
   scored<-reverse_scored %>%
     mutate(na.rm=F) %>%
     group_by(scale_name,scored_scale,SID) %>%
     summarise(
-      score=score_items(value,include,na.rm=na.rm[[1]],scale_name=scale_name[[1]],scored_scale=scored_scale[[1]]),
+      score=scorequaltrics:::score_items(
+          value,
+          include,
+          scale_name=scale_name[[1]],
+          scored_scale=scored_scale[[1]]),
       n_items=sum(!is.na(value)),
       n_missing=sum(is.na(value)),
       method=unique(include)) %>%
     mutate(
       score=as.character(score)) %>%
     bind_rows(non_numeric,.)
+  return(scored)
 }
 
 #' Score step one and two
