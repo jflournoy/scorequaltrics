@@ -129,7 +129,6 @@ score_items<-function(item_values,scoring_methods,na.rm=F,mean.na.rm=T,scale_nam
                 'grouping rows correctly, and that the rubric is correct.\n',
                 '(scale name is ',scale_name,', scored scale is ',scored_scale,')\n',
                 paste(scoring_methods, collapse='\n')))
-  scoring_method<-unique(scoring_methods)
   
   length_vars <- lapply(list(item_values, scoring_methods), length)
   detail_vars <- list(SID = SID, scale_name = scale_name, scored_scale = scale_name)
@@ -147,14 +146,26 @@ score_items<-function(item_values,scoring_methods,na.rm=F,mean.na.rm=T,scale_nam
       return(NA)
   }
   
-  if (scoring_method==1){
+  scoring_method <- unique(scoring_methods)
+  scoring_is_mean <- try(scoring_method == 1)
+  
+  if (!inherits(scoring_is_mean, what = 'try-error') && scoring_is_mean){
     scoring_func<-mean
     na.rm=mean.na.rm
   } else {
     scoring_func<-try(get(scoring_method))
   }
-  if (class(scoring_func)=='try-error')
-    stop(paste('Scoring method "',scoring_method,'" not found. (scale name is ',scale_name,')'))
+  if (inherits(scoring_func, what = 'try-error')){
+      if(any(length_details > 0)){
+          details <- detail_vars[which(length_details > 0)]
+          message('Details: ', 
+                  paste(paste(names(details), details, sep = ': '), collapse = ', '),
+                  '.')
+      } else {
+          message('No scale or subscale info.')
+      }  
+    stop(paste0('Scoring method "',scoring_method,'" not found.'))
+  }
   if(na.rm) {
     do_for_na<-na.exclude
   } else {
@@ -277,7 +288,8 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
                   value,
                   include,
                   scale_name=scale_name[[1]],
-                  scored_scale=scored_scale[[1]]),
+                  scored_scale=scored_scale[[1]],
+                  SID = SID[[1]]),
               n_items=sum(!is.na(value)),
               n_missing=sum(is.na(value)),
               method=unique(include))
@@ -321,7 +333,8 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
           value,
           include,
           scale_name=scale_name[[1]],
-          scored_scale=scored_scale[[1]]),
+          scored_scale=scored_scale[[1]],
+          SID = SID[[1]]),
       n_items=sum(!is.na(value)),
       n_missing=sum(is.na(value)),
       method=unique(include)) %>%

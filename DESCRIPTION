@@ -1,10 +1,10 @@
 Package: scorequaltrics
 Type: Package
 Title: Qualtrics Survey Data Access and Scoring
-Version: 0.2.0
-Authors@R: c(person("John", "Flournoy", "C.", role = c("aut", "cre"), email = "flournoy@uoregon.edu"), 
+Version: 0.2.01
+Authors@R: c(person("John", "Flournoy", "C.", role = c("aut", "cre"), email = "john.flournoy@gmail.com"), 
     person("Jason", "Bryer", "", role = c("ctb"), email = "jbryer@excelsior.edu"))
-Maintainer: John Flournoy <flournoy@uoregon.edu>
+Maintainer: John Flournoy <john.flournoy@gmail.com>
 Depends:
     utils,
     XML,
