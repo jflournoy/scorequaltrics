@@ -23,4 +23,3 @@ You can retrieve the list of survey in your account with the `getSurveys` functi
                1         117  SS SV_39RKJNe1htAdR4g  Faculty Survey of Student 	Readiness
                2         400  SS SV_3rQruV2eBPG7uFS      Staff Satisfaction Survey - 2011
 
-
