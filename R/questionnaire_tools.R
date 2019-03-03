@@ -269,6 +269,9 @@ score_questionnaire_dsn <- function(dataDF,rubricsDF){
   #Takes long-form question data and rubric data, and a logical
   # value specifying whether to use _part2 rubrics.
   #Returns scored scales.
+  if(any(dim(dataDF)[1] < 1, dim(rubricsDF)[1] < 1)){
+      return(data.frame())
+  }
   scores_with_scoring_params<-rubricsDF  %>%
     left_join(
       dataDF,
