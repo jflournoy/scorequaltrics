@@ -2,10 +2,10 @@ Package: scorequaltrics
 Type: Package
 Title: Qualtrics Survey Data Access and Scoring
 Version: 0.2.01
-Authors@R: c(person("John", "Flournoy", "C.", role = c("aut", "cre"), email = "john.flournoy@gmail.com"), 
-    person("Jason", "Bryer", "", role = c("ctb"), email = "jbryer@excelsior.edu"))
+Authors@R: c(person("John", "Flournoy", "C.", role = c("aut", "cre"), email = "john.flournoy@gmail.com"))
 Maintainer: John Flournoy <john.flournoy@gmail.com>
 Depends:
+    qualtRics,
     utils,
     XML,
     data.table
@@ -18,7 +18,7 @@ License: MIT License
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
-URL: http://jflournoy.github.com/qualtrics
+URL: http://jflournoy.github.com/scorequaltrics
 Suggests: dplyr,
     tidyr,
     knitr,
