@@ -1,7 +1,7 @@
 Package: scorequaltrics
 Type: Package
 Title: Qualtrics Survey Data Access and Scoring
-Version: 0.2.01
+Version: 0.3.0
 Authors@R: c(person(given = "John C.", family = "Flournoy", role = c("aut", "cre"), email = "john.flournoy@gmail.com"))
 Maintainer: John Flournoy <john.flournoy@gmail.com>
 Depends:
