@@ -4,8 +4,13 @@
 \alias{write_widened_scored_scale}
 \title{Write widened scored scale}
 \usage{
-write_widened_scored_scale(dataDF, scale_names = NULL, dir_name = NULL,
-  file_name = NULL, metadata = NULL)
+write_widened_scored_scale(
+  dataDF,
+  scale_names = NULL,
+  dir_name = NULL,
+  file_name = NULL,
+  metadata = NULL
+)
 }
 \arguments{
 \item{dataDF}{A long data frame.}

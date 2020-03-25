@@ -4,8 +4,17 @@
 \alias{sendReminder}
 \title{Sends a survey to the given recipient.}
 \usage{
-sendReminder(username, password, parentEmailDistributionId, sendDate, fromEmail,
-  fromName, subject, messageId, libraryId)
+sendReminder(
+  username,
+  password,
+  parentEmailDistributionId,
+  sendDate,
+  fromEmail,
+  fromName,
+  subject,
+  messageId,
+  libraryId
+)
 }
 \arguments{
 \item{username}{the Qualtrics username.}

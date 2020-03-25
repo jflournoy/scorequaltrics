@@ -4,8 +4,11 @@
 \alias{score_pdss}
 \title{Score pubertal development scale}
 \usage{
-score_pdss(long_survey_data_filtered, gender_mix = "mf", gendercode = c(m =
-  1, f = 0))
+score_pdss(
+  long_survey_data_filtered,
+  gender_mix = "mf",
+  gendercode = c(m = 1, f = 0)
+)
 }
 \arguments{
 \item{long_survey_data_filtered}{data}

@@ -4,14 +4,14 @@
 \alias{get_survey_data}
 \title{Get survey data}
 \usage{
-get_survey_data(surveysDF, creds, pid_col = "ID")
+get_survey_data(surveysDF, pid_col = "ID", ...)
 }
 \arguments{
-\item{surveysDF}{A data.frame as returned by the \code{\link{get_surveys}}}
-
-\item{creds}{A named character with \code{creds$user} and \code{creds$token}}
+\item{surveysDF}{A data.frame as returned by the \code{\link{get_surveys}}.}
 
 \item{pid_col}{A character with the column name specifying user ID.}
+
+\item{...}{Not used.}
 }
 \value{
 Returns a long format data.frame of survey data with names "SID variable name", "item", "value", "survey_name"

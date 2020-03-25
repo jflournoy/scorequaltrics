@@ -4,8 +4,10 @@
 \alias{format_request}
 \title{Format a list of arguments into a Qualtrics API request.}
 \usage{
-format_request(api_args,
-  rooturl = "https://survey.qualtrics.com/WRAPI/ControlPanel/api.php")
+format_request(
+  api_args,
+  rooturl = "https://survey.qualtrics.com/WRAPI/ControlPanel/api.php"
+)
 }
 \arguments{
 \item{api_args}{List of arguments}

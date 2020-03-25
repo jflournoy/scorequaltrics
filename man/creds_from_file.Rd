@@ -2,7 +2,7 @@
 % Please edit documentation in R/auth.R
 \name{creds_from_file}
 \alias{creds_from_file}
-\title{Get authentication}
+\title{creds_from_file}
 \usage{
 creds_from_file(creds_yaml = "credentials.yaml")
 }
@@ -10,5 +10,8 @@ creds_from_file(creds_yaml = "credentials.yaml")
 \item{creds_yaml}{The .yaml file that contains the user's credentials}
 }
 \description{
-Instructions here: https://survey.qualtrics.com/WRAPI/ControlPanel/docs.php#authentication_2.3
+Reads the API key and base URL from a file and sets up the environment
+variables necessary for accessing data. Uses
+\code{\link[qualtRics]{qualtrics_api_credentials}}, but does not save
+credentials to the .Renviron file.
 }
