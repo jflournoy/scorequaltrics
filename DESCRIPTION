@@ -2,22 +2,22 @@ Package: scorequaltrics
 Type: Package
 Title: Qualtrics Survey Data Access and Scoring
 Version: 0.2.01
-Authors@R: c(person("John", "Flournoy", "C.", role = c("aut", "cre"), email = "john.flournoy@gmail.com"))
+Authors@R: c(person(given = "John C.", family = "Flournoy", role = c("aut", "cre"), email = "john.flournoy@gmail.com"))
 Maintainer: John Flournoy <john.flournoy@gmail.com>
 Depends:
     qualtRics,
     utils,
     XML,
     data.table
-Description: This R project/package provides functions that wrap the
-    Qualtrics.com web survey tool. API access is required and requests can be
+Description: This package provides functions that wrap the
+    Qualtrics.com web survey tool. API access is required (using the qualtRics pacakge) and requests can be
     made to Qualtrics Support. Functions include extracting survey data into R
     as well as managing panels and sending surveys. Additionally, this package
     allows easy scoring of retreived data using templates defined in csv files.
 License: MIT License
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 7.0.2
 URL: http://jflournoy.github.com/scorequaltrics
 Suggests: dplyr,
     tidyr,
