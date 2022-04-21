@@ -4,19 +4,7 @@
 \alias{get_surveys}
 \title{Return a list of all surveys available to the user}
 \usage{
-get_surveys(creds, user = creds$user, token = creds$token,
-  format = "JSON", version = "2.4")
-}
-\arguments{
-\item{creds}{Qualtrics credentials. A list with values for user and token.}
-
-\item{user}{Qualtrics username.}
-
-\item{token}{Qualtrics API token.}
-
-\item{format}{The format of the requested data. Default is JSON.}
-
-\item{version}{The API version to use. Defaults to the latest version, 2.4.}
+get_surveys(...)
 }
 \description{
 Return a list of all surveys available to the user

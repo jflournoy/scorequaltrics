@@ -4,8 +4,11 @@
 \alias{reverse_score}
 \title{Reverse score}
 \usage{
-reverse_score(item_values, min = stop("Must specify min and max score."),
-  max = stop("Must specify min and max score."))
+reverse_score(
+  item_values,
+  min = stop("Must specify min and max score."),
+  max = stop("Must specify min and max score.")
+)
 }
 \arguments{
 \item{item_values}{item_values}

@@ -4,24 +4,25 @@
 \alias{get_survey_responses}
 \title{Return a data.frame of the survey responses for a given survey}
 \usage{
-get_survey_responses(creds, user = creds$user, token = creds$token,
-  surveyid, format = "JSON", version = "2.4", otherArgs = NULL)
+get_survey_responses(
+  surveyID,
+  label = FALSE,
+  convert = FALSE,
+  force_request = TRUE,
+  ...
+)
 }
 \arguments{
-\item{creds}{Qualtrics credentials. A list with values for user and token.}
+\item{surveyID}{Unique survey ID as returned from \code{\link{get_surveys}}.}
 
-\item{user}{Qualtrics username.}
+\item{label}{default is \code{FALSE}.}
 
-\item{token}{Qualtrics API token.}
+\item{convert}{default is \code{FALSE}.}
 
-\item{surveyid}{Qualtrics survey ID.}
+\item{force_request}{default is \code{TRUE}.}
 
-\item{format}{The format of the requested data. Default is JSON.}
-
-\item{version}{The API version to use. Defaults to the latest version, 2.4.}
-
-\item{otherArgs}{A `list` of other arguments to provide the API.}
+\item{...}{See \code{\link[qualtRics]{fetch_survey}.}}
 }
 \description{
-Return a data.frame of the survey responses for a given survey
+See \code{\link[qualtRics]{fetch_survey}} for complete information on available options.
 }

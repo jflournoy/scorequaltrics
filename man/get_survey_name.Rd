@@ -4,22 +4,8 @@
 \alias{get_survey_name}
 \title{Get the name of a Qualtrics survey from the survey ID}
 \usage{
-get_survey_name(creds, survey_id, user = creds$user, token = creds$token,
-  format = "JSON", version = "2.4")
-}
-\arguments{
-\item{creds}{Qualtrics credentials. A list with values for user and token.}
-
-\item{survey_id}{Qualtris survey id.}
-
-\item{user}{Qualtrics username.}
-
-\item{token}{Qualtrics API token.}
-
-\item{format}{The format of the requested data. Default is JSON.}
-
-\item{version}{The API version to use. Defaults to the latest version, 2.4.}
+get_survey_name(...)
 }
 \description{
-Get the name of a Qualtrics survey from the survey ID
+Depricated
 }

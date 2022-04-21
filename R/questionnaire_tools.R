@@ -1,34 +1,32 @@
 #' Get survey data
 #'
-#' @param surveysDF A data.frame as returned by the \code{\link{get_surveys}}
-#' @param creds A named character with \code{creds$user} and \code{creds$token}
-#' @param pid_col A character with the column name specifying user ID.
+#' @param surveysDF A data.frame as returned by the \code{\link{get_surveys}}.
+#' @param pid_col A character vector with the column names specifying user ID
+#'   and other column names to use as ID variables in data-lengthening.
+#' @param ... Not used.
 #'
-#' @return Returns a long format data.frame of survey data with names "SID variable name", "item", "value", "survey_name"
-#' @import dplyr
-#' @import tidyr
+#' @return Returns a long format data.frame of survey data with names ["SID
+#'   variable names", ...], "item", "value", "survey_name"
+#' @import data.table
 #' @export
-get_survey_data<-function(surveysDF, creds, pid_col='ID'){
-  survey_data<-surveysDF %>%
-    group_by(SurveyID) %>%
-    do(
-      survey_name=.$SurveyName[[1]],
-      survey_data=get_survey_responses(
-        creds,
-        surveyid=.$SurveyID[[1]])
-    )
-  long_survey_data<-survey_data %>%
-    filter(dim(survey_data)[1]>0) %>%
-    do({
-      gather_cols<-names(.$survey_data)[!grepl(pid_col,names(.$survey_data))]
-      aDF<-gather_(.$survey_data,
-                   'item',
-                   'value',
-                   gather_cols)
-      aDF$survey_name<-.$survey_name
-      aDF
+get_survey_data <- function (surveysDF, pid_cols = "ID", ...) 
+{
+    requireNamespace("data.table", quietly = TRUE)
+    surveysDF <- unique(surveysDF)
+    survey_data <- lapply(surveysDF$id, \(x) data.table(get_survey_responses(x)))
+    names(survey_data) <- surveysDF$SurveyName
+    long_survey_data_list <- lapply(survey_data, \(x){
+        if(dim(x)[[1]] > 0){
+            id.vars <- pid_cols[pid_cols %in% names(x)]
+            x_l <- data.table::melt(x, id.vars = id.vars, variable.name = 'item', value.name = 'value')
+            return(x_l)
+        } else {
+            return(data.table())
+        }
     })
-  long_survey_data
+    long_survey_data <- data.table::rbindlist(l = long_survey_data_list, use.names = TRUE, fill = TRUE, idcol = 'survey_name')
+    
+    return(long_survey_data)
 }
 
 #' Get rubrics
@@ -49,51 +47,59 @@ get_survey_data<-function(surveysDF, creds, pid_col='ID'){
 #' @export
 get_rubrics <- function (rubric_filenames, type = 'scoring', source = "csv")
 {
-    if(! type %in% c('scoring', 'recoding')){
-        stop('Option `type` must be either "scoring" or "recoding"')
-    }
-
-    csv_rubrics <- rubric_filenames %>%
-        mutate(file = as.character(file)) %>%
-        group_by(file) %>% do({
-            data_frame(rubric = list(read.csv(.$file[[1]], header = T,
-                                              stringsAsFactors = F)))
-        })
-
-    rubric_data_long <- csv_rubrics %>%
-        group_by(file) %>%
-        do({
-            thisDF <- .$rubric[[1]]
-
-            names(thisDF) <- tolower(gsub(" ",
-                                          "_",
-                                          gsub("\\.",
-                                               "_", names(thisDF))))
-            if(type == 'scoring'){
-                aDF <- gather(thisDF,
-                              scored_scale,
-                              include,
-                              -one_of("data_file_name",
-                                      "scale_name", "column_name", "reverse", "transform",
-                                      "min", "max")) %>%
-                    mutate_all(funs(as.character))
-            } else if (type == 'recoding') {
-
-                aDF <- thisDF %>%
-                    mutate_all(funs(as.character))
-            }
-            aDF
-        })
-
-    rubric_data_long
+  requireNamespace('dplyr', quietly = TRUE)
+  requireNamespace('tidyr', quietly = TRUE)
+  if(! type %in% c('scoring', 'recoding')){
+    stop('Option `type` must be either "scoring" or "recoding"')
+  }
+  
+  csv_rubrics <- rubric_filenames %>%
+    mutate(file = as.character(file)) %>%
+    group_by(file) %>% do({
+      data_frame(rubric = list(read.csv(.$file[[1]], header = T,
+                                        stringsAsFactors = F)))
+    })
+  
+  rubric_data_long <- csv_rubrics %>%
+    group_by(file) %>%
+    do({
+      thisDF <- .$rubric[[1]]
+      
+      names(thisDF) <- tolower(gsub(" ",
+                                    "_",
+                                    gsub("\\.",
+                                         "_", names(thisDF))))
+      if(type == 'scoring'){
+        aDF <- gather(thisDF,
+                      scored_scale,
+                      include,
+                      -one_of("data_file_name",
+                              "scale_name", "column_name", "reverse", "transform",
+                              "min", "max")) %>%
+          mutate_all(funs(as.character))
+      } else if (type == 'recoding') {
+        
+        aDF <- thisDF %>%
+          mutate_all(funs(as.character))
+      }
+      aDF
+    })
+  
+  return(rubric_data_long)
 }
 
+#' get_uncoercibles returns values that should be kept as characters.
+#'
+#' @param dataDF 
+#'
+#' @import data.table
 #' @export
 get_uncoercibles <- function(dataDF){
-    dataDT <- as.data.table(dataDF)
-    dataDT <- dataDT[, checkcol := class(type.convert(value, as.is=T)) == 'character', by = .(item,value)]
-    dataDT <- dataDT[checkcol == T]
-    return(dataDT[,checkcol := NULL])
+  requireNamespace('data.table', quietly = TRUE)
+  dataDT <- as.data.table(dataDF)
+  dataDT <- dataDT[, checkcol := class(type.convert(value, as.is=T)) == 'character', by = .(item,value)]
+  dataDT <- dataDT[checkcol == T]
+  return(dataDT[,checkcol := NULL])
 }
 
 #' Get items from data file that exist in a rubric
@@ -105,6 +111,7 @@ get_uncoercibles <- function(dataDF){
 #' @import data.table
 #' @export
 get_items_in_rubric <- function(dataDF, rubricDF){
+  requireNamespace('data.table', quietly = TRUE)
   dataDT <- as.data.table(dataDF)
   rubricCols <- rubricDF$column_name[rubricDF$include %in% c(1, "1", "sum", "prod")]
   smallDF <- as.data.frame(dataDT[item %in% rubricCols])
@@ -676,4 +683,45 @@ write_widened_scored_scale <- function(dataDF, scale_names = NULL,
     full_file_name <- file.path(dir_name, file_name)
     message('Writing to ', full_file_name)
     write.csv(wide_data_frame, file = full_file_name, row.names = F)
+}
+
+#' Fix Participant IDs
+#'
+#' This function first removes the prefix specified in \code{prefix} (if found)
+#' and then converts all columns in pid_cols to numeric. It then takes the first
+#' non-NA value found, using column order in pid_cols for priority. It returns a
+#' vector of ids, with include_prefix prepended if supplied. This assumes x is a
+#' data.table.
+#'
+#' @param x A data.frame or data.table. Can be the whole table returned by
+#'   \code{\link{get_survey_data}}.
+#' @param pid_cols A character vector of column names in order of priority. x
+#'   does not need to include all columns in pid_cols.
+#' @param prefix A regular expression that will be removed prior to conversion
+#'   to numeric.
+#' @param format_ids is either FALSE or an expression understood by
+#'   \code{sprintf} used to format the resulting IDs
+#'
+#' @return A numeric or character vector of ids.
+#' @export
+#'
+#' @import data.table
+#' @import stringr
+fix_ids <- function(x, pid_cols, prefix = NULL, format_ids = FALSE){
+    if(!inherits(x, 'data.table')){
+        if(!inherits(x, 'data.frame')){
+            stop('x must be a data.frame or data.table')
+        } else {
+            x <- data.table(x)
+        }
+    }
+    pid_cols <- pid_cols[pid_cols %chin% names(x)]
+    x <- x[, ..pid_cols]
+    x[, (pid_cols) := lapply(.SD, stringr::str_remove, pattern = prefix), .SDcols = pid_cols]
+    x[, (pid_cols) := lapply(.SD, as.numeric), .SDcols = pid_cols]
+    ids <- fcoalesce(x)
+    if(is.character(format_ids)){
+        ids <- fifelse(!is.na(ids), sprintf(format_ids, ids), NA_character_)
+    }
+    return(ids)
 }

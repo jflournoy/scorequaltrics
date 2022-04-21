@@ -4,9 +4,20 @@
 \alias{sendSurveyToIndividual}
 \title{Sends a survey to the given recipient.}
 \usage{
-sendSurveyToIndividual(username, password, surveyId, sendDate, fromEmail,
-  fromName, subject, messageId, messageLibraryId, panelId, panelLibraryId,
-  recipientId)
+sendSurveyToIndividual(
+  username,
+  password,
+  surveyId,
+  sendDate,
+  fromEmail,
+  fromName,
+  subject,
+  messageId,
+  messageLibraryId,
+  panelId,
+  panelLibraryId,
+  recipientId
+)
 }
 \arguments{
 \item{username}{the Qualtrics username.}

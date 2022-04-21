@@ -4,8 +4,13 @@
 \alias{plot_scored_scale}
 \title{Plot Scored Scale}
 \usage{
-plot_scored_scale(aDF, scale_regx = ".*", type = "score",
-  by_gender = FALSE, gender_var = NA)
+plot_scored_scale(
+  aDF,
+  scale_regx = ".*",
+  type = "score",
+  by_gender = FALSE,
+  gender_var = NA
+)
 }
 \arguments{
 \item{aDF}{a scored data frame in long format with columns \code{scale_name},

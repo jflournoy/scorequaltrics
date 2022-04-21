@@ -4,8 +4,15 @@
 \alias{score_items}
 \title{Score items}
 \usage{
-score_items(item_values, scoring_methods, na.rm = F, mean.na.rm = T,
-  scale_name = "", scored_scale = "", SID = "")
+score_items(
+  item_values,
+  scoring_methods,
+  na.rm = F,
+  mean.na.rm = T,
+  scale_name = "",
+  scored_scale = "",
+  SID = ""
+)
 }
 \arguments{
 \item{item_values}{item_values}

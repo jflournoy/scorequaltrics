@@ -4,9 +4,17 @@
 \alias{addRecipient}
 \title{Adds a recipient to the given panel.}
 \usage{
-addRecipient(username, password, libraryId, panelId, firstName = NULL,
-  lastName = NULL, email = NULL, externalDataRef = NULL,
-  embeddedData = NULL)
+addRecipient(
+  username,
+  password,
+  libraryId,
+  panelId,
+  firstName = NULL,
+  lastName = NULL,
+  email = NULL,
+  externalDataRef = NULL,
+  embeddedData = NULL
+)
 }
 \arguments{
 \item{username}{the Qualtrics username.}

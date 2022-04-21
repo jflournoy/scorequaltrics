@@ -4,8 +4,12 @@
 \alias{score_questionnaire_psych}
 \title{score questionnaire psych}
 \usage{
-score_questionnaire_psych(dataDF, rubricsDF, scale_name = NULL,
-  return_with_data = FALSE)
+score_questionnaire_psych(
+  dataDF,
+  rubricsDF,
+  scale_name = NULL,
+  return_with_data = FALSE
+)
 }
 \arguments{
 \item{dataDF}{dataDF}

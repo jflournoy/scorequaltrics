@@ -4,17 +4,19 @@
 \alias{get_survey_data}
 \title{Get survey data}
 \usage{
-get_survey_data(surveysDF, creds, pid_col = "ID")
+get_survey_data(surveysDF, pid_cols = "ID", ...)
 }
 \arguments{
-\item{surveysDF}{A data.frame as returned by the \code{\link{get_surveys}}}
+\item{surveysDF}{A data.frame as returned by the \code{\link{get_surveys}}.}
 
-\item{creds}{A named character with \code{creds$user} and \code{creds$token}}
+\item{...}{Not used.}
 
-\item{pid_col}{A character with the column name specifying user ID.}
+\item{pid_col}{A character vector with the column names specifying user ID
+and other column names to use as ID variables in data-lengthening.}
 }
 \value{
-Returns a long format data.frame of survey data with names "SID variable name", "item", "value", "survey_name"
+Returns a long format data.frame of survey data with names ["SID
+  variable names", ...], "item", "value", "survey_name"
 }
 \description{
 Get survey data
